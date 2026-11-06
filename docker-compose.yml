@@ -1,0 +1,78 @@
+version: "3"
+
+
+services:
+  influxdb:
+    image: influxdb:core
+    container_name: influxdb
+    environment:
+      - INFLUXDB_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN:-}
+      - INFLUXDB_DATABASE=${INFLUXDB_DATABASE:-syslog}
+      - INFLUXDB_RETENTION=${INFLUXDB_RETENTION:-}
+    volumes:
+      - influxdb-storage:/var/lib/influxdb3
+      - ./influx/entrypoint.sh:/usr/local/bin/influx-entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/influx-entrypoint.sh"]
+    restart: unless-stopped
+
+  influxdb3-explorer:
+    image: influxdata/influxdb3-ui
+    container_name: influxdb3-explorer
+    ports:
+      - 8888:80
+    restart: unless-stopped
+    command: ["--mode=admin"]
+    depends_on:
+      - influxdb
+
+
+  telegraf:
+    image: telegraf:alpine
+    container_name: telegraf
+    links:
+      - influxdb
+    depends_on:
+      - influxdb
+    environment:
+      - INFLUX_DATABASE=${INFLUXDB_DATABASE:-syslog}
+      - INFLUXDB_TOKEN_FILE=/var/lib/influxdb3/admin-token.json
+    volumes:
+      # Mount for telegraf config
+      - ./telegraf:/etc/telegraf/
+      - influxdb-storage:/var/lib/influxdb3:ro
+    command: ["sh", "/etc/telegraf/entrypoint.sh"]
+    restart: unless-stopped  
+
+
+
+  syslog-ng:
+    image: lscr.io/linuxserver/syslog-ng:latest
+    container_name: syslog-ng
+    environment:
+      - TZ=Europe/Rome
+    links:
+      - telegraf  
+    volumes:
+      - ./syslog/syslog-ng.conf:/config/syslog-ng.conf
+#      - ./syslog/log:/var/log #optional
+    ports:
+      - 514:5514/udp
+    restart: unless-stopped 
+
+
+
+    
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    links:
+      - influxdb
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    
+volumes:
+  grafana-storage:
+  influxdb-storage:
