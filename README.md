@@ -1,8 +1,8 @@
-# 📊 Grafana-InfluxDB 2.x Syslog Server 🚀
+# 📊 Grafana-InfluxDB 3.X core Syslog Server 🚀
 
 ## A Comprehensive Guide to Setting Up a Scalable Syslog Solution 📝
 
-This guide provides detailed instructions for deploying a robust and scalable syslog server using Grafana, InfluxDB 2.x, Telegraf, and Syslog-ng. Whether for home use or enterprise environments, this solution offers efficient log collection, storage, and visualization. 🏠🏢
+This guide provides detailed instructions for deploying a robust and scalable syslog server using Grafana, InfluxDB 3.X, Telegraf, and Syslog-ng. Whether for home use or enterprise environments, this solution offers efficient log collection, storage, and visualization. 🏠🏢
 
 # How It Works ⚙️
 
