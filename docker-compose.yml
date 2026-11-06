@@ -20,6 +20,8 @@ services:
     container_name: influxdb3-explorer
     ports:
       - 8888:8080
+    volumes:
+      - influxdb3-explorer-storage:/db
     restart: unless-stopped
     command: ["--mode=admin"]
     depends_on:
@@ -29,6 +31,7 @@ services:
   telegraf:
     image: telegraf:alpine
     container_name: telegraf
+    user: "telegraf:telegraf"
     links:
       - influxdb
     depends_on:
@@ -40,7 +43,7 @@ services:
       # Mount for telegraf config
       - ./telegraf:/etc/telegraf/
       - influxdb-storage:/var/lib/influxdb3:ro
-    command: ["sh", "/etc/telegraf/entrypoint.sh"]
+    entrypoint: ["/bin/sh", "/etc/telegraf/entrypoint.sh"]
     restart: unless-stopped  
 
 
@@ -76,3 +79,4 @@ services:
 volumes:
   grafana-storage:
   influxdb-storage:
+  influxdb3-explorer-storage:
