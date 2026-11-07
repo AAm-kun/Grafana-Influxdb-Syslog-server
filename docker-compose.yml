@@ -60,7 +60,8 @@ services:
       - ./syslog/syslog-ng.conf:/config/syslog-ng.conf
 #      - ./syslog/log:/var/log #optional
     ports:
-      - 514:5514/udp
+      - 514:514/udp
+      - 514:514/tcp
     restart: unless-stopped 
 
 

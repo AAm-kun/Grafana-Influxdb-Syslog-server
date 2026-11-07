@@ -1,12 +1,12 @@
 # Syslog Server with InfluxDB 3 Core
 
-A Docker Compose stack that receives syslog over UDP, stores messages in InfluxDB 3 Core, and displays them in Grafana. The included dashboard is designed for this InfluxDB 3 setup.
+A Docker Compose stack that receives syslog over UDP and TCP, stores messages in InfluxDB 3 Core, and displays them in Grafana. The included dashboard is designed for this InfluxDB 3 setup.
 
 ## Data flow
 
-`Devices --UDP/514--> Syslog-ng --TCP/6514--> Telegraf --> InfluxDB 3 Core`
+`Devices --UDP/TCP/514--> Syslog-ng --TCP/6514--> Telegraf --> InfluxDB 3 Core`
 
-Grafana queries InfluxDB 3 over SQL. Syslog-ng handles incoming UDP messages and forwards them to Telegraf, which parses and writes them to the `syslog` database.
+Grafana queries InfluxDB 3 over SQL. Syslog-ng handles incoming UDP and TCP messages and forwards them to Telegraf, which parses and writes them to the `syslog` database.
 
 ## Start the stack
 
@@ -62,7 +62,7 @@ The dashboard contains SQL queries for the `syslog` database and panels for mess
 
 ## Send syslog messages
 
-Configure your devices to send syslog over UDP to the Docker host's IP address on port `514`. The Compose file maps this to Syslog-ng's UDP listener.
+Configure your devices to send syslog over UDP or TCP to the Docker host's IP address on the standard port `514`. The Compose file publishes port `514` for both protocols, and Syslog-ng listens on that port.
 
 ## Optional settings
 
