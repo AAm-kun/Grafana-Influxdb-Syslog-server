@@ -1,71 +1,66 @@
-# 📊 Grafana-InfluxDB 3.X core Syslog Server 🚀
+# Grafana + InfluxDB 2.x Syslog Server
 
+A Docker Compose setup for collecting syslog messages with Syslog-ng and Telegraf, storing them in InfluxDB 2.x, and visualizing them in Grafana.
 
-This guide provides detailed instructions for deploying a robust and scalable syslog server using Grafana, InfluxDB 3.X, Telegraf, and Syslog-ng. Whether for home use or enterprise environments, this solution offers efficient log collection, storage, and visualization. 🏠🏢
+## How it works
 
-# How It Works ⚙️
+1. Syslog-ng receives UDP syslog messages on port `514` of the host.
+2. Syslog-ng forwards messages to Telegraf over TCP.
+3. Telegraf parses the messages and writes them to the InfluxDB 2.x `syslog` bucket.
+4. Grafana queries InfluxDB to display the data.
 
-Initially, UDP logs are directed to the Syslog-ng container. This container then forwards the logs to Telegraf, which is responsible for parsing and structuring the data. The processed data is then pushed into InfluxDB for storage. Finally, Grafana is used to visualize and query these logs, providing insightful dashboards.
+Telegraf's syslog input has limitations with some UDP syslog formats. Syslog-ng serves as an intermediary, receiving UDP messages and forwarding them in a format Telegraf can process. If your devices already send a compatible format to Telegraf, you may be able to omit Syslog-ng.
 
-### Why Syslog-ng? 🤔
+![Syslog collection flow](diagram.jpg)
 
-Telegraf's syslog input plugin has limitations regarding UDP syslog formats. As per its official [documentation](https://github.com/influxdata/telegraf/blob/master/plugins/inputs/syslog/README.md):
+## Requirements
 
-> By default RFC5424 is used. RFC3164 only supports UDP transport (no streaming support)
+- Docker Engine
+- Docker Compose
 
-To overcome this, Syslog-ng acts as an intermediary. It receives the logs and formats them into a structure that Telegraf can readily accept.
+## Install and start
 
-*(**Note**: If your logs are already being sent from `rsyslog` or `syslog-ng` in a compatible format, you can bypass the dedicated Syslog-ng container and send data directly to Telegraf. This requires modifying the `docker-compose.yml` file to expose the **TCP** port for Telegraf.)*
+1. Clone this repository and enter the directory:
 
-# This is how it works:
-![diagram](diagram.jpg)
+   ```bash
+   git clone https://github.com/AAm-kun/Grafana-Syslog-server.git
+   cd Grafana-Syslog-server
+   ```
 
-# Installation Guide 🚀
+2. Review `docker-compose.yml` and `telegraf/telegraf.conf` before starting. Change the example InfluxDB username, password, and admin token to secure values. Keep the token, organization, and bucket settings consistent between the two files. Do not expose the example credentials to an untrusted network.
 
-To get started, ensure you have [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/) installed on your operating system.
+3. Start the services:
 
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/AAm-kun/Grafana-Influxdb_2.x-Syslog-server.git
-    ```
+   ```bash
+   docker compose up -d
+   ```
 
-2.  **Navigate and Configure**:
-    Change into the cloned directory and modify the `docker-compose.yml` file to adjust parameters as per your requirements.
+## Configure Grafana
 
-3.  **Launch the Stack**:
-    Open your terminal within the project directory and execute the following command:
-    ```bash
-    sudo docker compose up -d
-    ```
-    *(This command is compatible with both Docker Compose V1 and V2.)*
+Open [http://localhost:3000](http://localhost:3000) and sign in with the default Grafana credentials, `admin` / `admin`. Change the password when prompted.
 
-### Grafana Configuration 📊
+### Add InfluxDB as a data source
 
-Once all containers are running successfully, access the Grafana web interface via your browser at [http://localhost:3000](http://localhost:3000).
+In Grafana, go to **Connections → Add new connection → InfluxDB** and configure:
 
-1.  **Initial Login**:
-    *   Default credentials: `admin`/`admin`.
-    *   **Important**: Change these default credentials immediately for security reasons.
+- **Query language:** Flux
+- **URL:** `http://influxdb:8086`
+- **Organization:** `router` (or the organization configured in `docker-compose.yml`)
+- **Default bucket:** `syslog` (or the bucket configured in `docker-compose.yml`)
+- **Token:** the InfluxDB token configured in `docker-compose.yml` and `telegraf/telegraf.conf`
 
-2.  **Add InfluxDB Data Source**:
-    *   Navigate to `Connections` -> `Add new connection` -> `InfluxDB`.
-    *   Configure the fields according to your `docker-compose.yml` file.
-    *   Ensure you select `flux` as the **Query Language**.
-    *   Provide the InfluxDB token from your `docker-compose.yml` file.
-    *   Your configuration page should resemble the following (credentials may vary):
-        ![grafana_1](grafana_1.png)
-        ![grafana_2](grafana_2.png)
-        ![grafana_3](grafana_3.png)
-    *   Click `Save & Test`. A success notification will confirm your data source is working correctly.
+Save and test the data source. The screenshots below show an example configuration; values may differ if you changed the Compose settings.
 
-3.  **Import Syslog Dashboard**:
-    *   Go to `Dashboards` -> `New` -> `Import`.
-    *   Enter the Grafana dashboard ID `[18679](https://grafana.com/grafana/dashboards/18679-syslog/)` and click `Load`.
-    *   Select your configured InfluxDB data source and click `Import`.
-    *   You should now see your syslog data visualized in the dashboard!
+![Grafana InfluxDB data source settings](grafana_1.png)
+![Grafana InfluxDB data source settings](grafana_2.png)
+![Grafana InfluxDB data source settings](grafana_3.png)
 
-### Final Step: Configure Your Devices 💻
+### Import the syslog dashboard
 
-Finally, configure your servers or routers to send syslog messages to your newly set up syslog server's IP address and port.
+1. In Grafana, go to **Dashboards → New → Import**.
+2. Enter dashboard ID [18679 (Syslog)](https://grafana.com/grafana/dashboards/18679-syslog/) and select **Load**.
+3. Select the InfluxDB data source you configured and import the dashboard.
 
+## Configure your devices
 
+Configure your servers, routers, or other devices to send syslog messages to the Docker host's IP address over UDP port `514`. The Compose configuration maps that host port to Syslog-ng's UDP listener.
