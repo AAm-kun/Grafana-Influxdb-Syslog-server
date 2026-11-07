@@ -14,18 +14,19 @@ services:
       - ./influx/entrypoint.sh:/usr/local/bin/influx-entrypoint.sh:ro
     entrypoint: ["/bin/sh", "/usr/local/bin/influx-entrypoint.sh"]
     restart: unless-stopped
-
-  influxdb3-explorer:
-    image: influxdata/influxdb3-ui
-    container_name: influxdb3-explorer
-    ports:
-      - 8888:8080
-    volumes:
-      - influxdb3-explorer-storage:/db
-    restart: unless-stopped
-    command: ["--mode=admin"]
-    depends_on:
-      - influxdb
+    
+# Enable explorer if you need to debug
+  # influxdb3-explorer:
+  #   image: influxdata/influxdb3-ui
+  #   container_name: influxdb3-explorer
+  #   ports:
+  #     - 8888:8080
+  #   volumes:
+  #     - influxdb3-explorer-storage:/db
+  #   restart: unless-stopped
+  #   command: ["--mode=admin"]
+  #   depends_on:
+  #     - influxdb
 
 
   telegraf:
